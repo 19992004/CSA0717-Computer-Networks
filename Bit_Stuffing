@@ -1,0 +1,81 @@
+                              
+#include <stdio.h>
+#include <string.h>
+
+#define MAX 1000
+void crc_divide(char *work, const char *gen, int data_len, int gen_len) {
+    for (int i = 0; i < data_len; i++) {
+        if (work[i] == '1') {
+            for (int j = 0; j < gen_len; j++) {
+                work[i + j] = (work[i + j] == gen[j]) ? '0' : '1';
+            }
+        }
+    }
+}
+void compute_crc(const char *data, const char *gen, char *remainder, char *codeword) {
+    int data_len = (int)strlen(data);
+    int gen_len  = (int)strlen(gen);
+
+    char work[MAX];
+    strcpy(work, data);
+    for (int i = 0; i < gen_len - 1; i++) strcat(work, "0");  
+
+    crc_divide(work, gen, data_len, gen_len);
+
+    strncpy(remainder, work + data_len, gen_len - 1);
+    remainder[gen_len - 1] = '\0';
+
+    strcpy(codeword, data);
+    strcat(codeword, remainder);
+}
+void bit_stuff(const char *in, char *out) {
+    int count1 = 0, k = 0;
+    for (int i = 0; in[i] != '\0'; i++) {
+        out[k++] = in[i];
+        if (in[i] == '1') {
+            count1++;
+            if (count1 == 5) {
+                out[k++] = '0';     
+                count1 = 0;
+            }
+        } else {
+            count1 = 0;
+        }
+    }
+    out[k] = '\0';
+}
+void bit_unstuff(const char *in, char *out) {
+    int count1 = 0, k = 0;
+    for (int i = 0; in[i] != '\0'; i++) {
+        out[k++] = in[i];
+        if (in[i] == '1') {
+            count1++;
+            if (count1 == 5) {
+                if (in[i + 1] == '0') i++;
+                count1 = 0;
+            }
+        } else {
+            count1 = 0;
+        }
+    }
+    out[k] = '\0';
+}
+
+int main(void) {
+    char data[MAX] = "1101011011";
+    char gen[MAX]  = "10011";
+
+    char rem[MAX], codeword[MAX], stuffed[MAX], unstuffed[MAX];
+
+    compute_crc(data, gen, rem, codeword);
+    bit_stuff(codeword, stuffed);
+    bit_unstuff(stuffed, unstuffed); 
+
+    printf("Data           : %s\n", data);
+    printf("Generator (G)  : %s\n", gen);
+    printf("CRC remainder  : %s\n", rem);
+    printf("Codeword       : %s\n", codeword);
+    printf("Bit-stuffed Tx : %s\n", stuffed);
+    printf("Unstuffed      : %s\n", unstuffed);
+
+}
